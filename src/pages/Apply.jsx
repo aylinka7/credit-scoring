@@ -9,12 +9,12 @@ import ResultScenarioB from '../components/ResultScenarioB'
 const VALIDATION_RULES = {
     age:              (v) => (!v || v < 18) && 'Минимальный возраст — 18 лет',
     monthly_income:   (v) => (!v || v < 1000) && 'Укажите корректный доход',
-    loan_amount:      (v) => (!v || v < 10000) && 'Минимальная сумма — 10 000 ₽',
-    loan_term_months: (v) => (!v || v < 1) && 'Укажите срок кредита',
     employment_years: (v) => v === '' && 'Укажите трудовой стаж',
+    loan_amount:      (v) => (!v || v < 10000) && 'Минимальная сумма — 10 000 сом',
+    loan_term_months: (v) => (!v || v < 1) && 'Укажите срок кредита',
     interest_rate:    (v) => (!v || v <= 0) && 'Укажите процентную ставку',
-    days_overdue:     (v) => v === '' && 'Укажите количество дней просрочки',
-    credit_inquiries: (v) => v === '' && 'Укажите количество запросов',
+    past_due_30d:     (v) => v === '' && 'Укажите количество просрочек',
+    inquiries_6m:     (v) => v === '' && 'Укажите количество запросов',
 }
 
 const GROUP_ORDER = ['personal', 'financial', 'loan', 'history']
@@ -49,15 +49,19 @@ export default function Apply() {
         e.preventDefault()
         setApiError('')
         if (!validate()) return
+
         setStage('loading')
+
         try {
             const payload = {}
-            for (const key in values) payload[key] = values[key] === '' ? 0 : Number(values[key])
+            for (const key in values) {
+                payload[key] = values[key] === '' ? 0 : Number(values[key])
+            }
             const res = await scoreCredit(payload)
             setResult(res)
             setStage('result')
         } catch (err) {
-            setApiError(err.message || 'Ошибка сервера')
+            setApiError(err.message || 'Сервер недоступен. Убедитесь что бэкенд запущен на localhost:8000')
             setStage('form')
         }
     }
@@ -78,14 +82,12 @@ export default function Apply() {
         )
     }
 
-    // Ветка результатов по логике из ТЗ
     if (stage === 'result' && result) {
         const approvalChance = (1 - result.probability) * 100
         if (approvalChance < 50) {
             return <ResultScenarioA result={result} onReset={handleReset} />
-        } else {
-            return <ResultScenarioB result={result} onReset={handleReset} />
         }
+        return <ResultScenarioB result={result} onReset={handleReset} />
     }
 
     const filledCount = FORM_FIELDS.filter((f) => values[f.id] !== '').length
@@ -114,7 +116,16 @@ export default function Apply() {
 
                 {apiError && (
                     <div className="glass rounded-xl p-4 mb-6 border border-signal-red/20 bg-signal-red/5 animate-fade-in">
-                        <p className="text-sm text-signal-red font-medium">Ошибка: {apiError}</p>
+                        <div className="flex items-start gap-3">
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-signal-red flex-shrink-0 mt-0.5">
+                                <circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5"/>
+                                <path d="M6 6.5l6 5M12 6.5l-6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+                            </svg>
+                            <div>
+                                <p className="text-sm text-signal-red font-medium">Ошибка подключения</p>
+                                <p className="text-xs text-signal-red/70 mt-0.5">{apiError}</p>
+                            </div>
+                        </div>
                     </div>
                 )}
 
@@ -143,7 +154,9 @@ export default function Apply() {
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9 L6 5 L10 9 L16 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="14" r="2.5" fill="currentColor"/></svg>
                             <span>Получить результат скоринга</span>
                         </button>
-                        <p className="text-center text-xs text-content-faint mt-4 font-mono transition-colors">Нажимая кнопку, вы запускаете модель кредитного скоринга</p>
+                        <p className="text-center text-xs text-content-faint mt-4 font-mono transition-colors">
+                            Данные отправляются на localhost:8000 · Ответ — вероятность дефолта
+                        </p>
                     </div>
                 </form>
             </div>
