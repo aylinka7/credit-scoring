@@ -1,14 +1,6 @@
-const API_BASE_URL = 'http://localhost:5000'
+const API_BASE_URL = 'http://localhost:5001'
 
-/**
- * Отправляет данные заявки на бэкенд.
- * Бэкенд принимает { features: [...] } — массив из 8 чисел.
- * Возвращает { prediction: число_от_0_до_1 }.
- */
 export async function scoreCredit(data) {
-    // Порядок признаков строго как у бэкенда:
-    // [age, monthly_income, employment_years, loan_amount,
-    //  loan_term_months, interest_rate, past_due_30d, inquiries_6m]
     const features = [
         Number(data.age) || 0,
         Number(data.monthly_income) || 0,
@@ -36,8 +28,16 @@ export async function scoreCredit(data) {
         throw new Error(json.error)
     }
 
+    // Бэкенд возвращает массив: { "prediction": [0.429...] }
+    // Берём первый элемент массива
+    const raw = json.prediction
+    const probability = Array.isArray(raw) ? raw[0] : raw
+
+    console.log('✅ Ответ бэкенда:', json)
+    console.log('✅ Шанс дефолта:', probability)
+
     return {
-        probability: parseFloat(json.prediction),
+        probability: parseFloat(probability),
         processed_at: new Date().toISOString(),
     }
 }
