@@ -3,7 +3,8 @@ import { FORM_FIELDS, FIELD_GROUPS, DEFAULT_VALUES } from '../data/fields'
 import { scoreCredit } from '../services/api'
 import InputField from '../components/InputField'
 import LoadingScreen from '../components/LoadingScreen'
-import ResultCard from '../components/ResultCard'
+import ResultScenarioA from '../components/ResultScenarioA'
+import ResultScenarioB from '../components/ResultScenarioB'
 
 const VALIDATION_RULES = {
     age:              (v) => (!v || v < 18) && 'Минимальный возраст — 18 лет',
@@ -27,9 +28,7 @@ export default function Apply() {
 
     const handleChange = useCallback((fieldId, value) => {
         setValues((prev) => ({ ...prev, [fieldId]: value }))
-        if (errors[fieldId]) {
-            setErrors((prev) => { const n = { ...prev }; delete n[fieldId]; return n })
-        }
+        if (errors[fieldId]) setErrors((prev) => { const n = { ...prev }; delete n[fieldId]; return n })
     }, [errors])
 
     const validate = useCallback(() => {
@@ -58,7 +57,7 @@ export default function Apply() {
             setResult(res)
             setStage('result')
         } catch (err) {
-            setApiError(err.message || 'Ошибка при обращении к серверу')
+            setApiError(err.message || 'Ошибка сервера')
             setStage('form')
         }
     }
@@ -79,12 +78,14 @@ export default function Apply() {
         )
     }
 
+    // Ветка результатов по логике из ТЗ
     if (stage === 'result' && result) {
-        return (
-            <div className="min-h-screen px-4 pt-24 pb-12">
-                <div className="max-w-lg mx-auto"><ResultCard result={result} onReset={handleReset} /></div>
-            </div>
-        )
+        const approvalChance = (1 - result.probability) * 100
+        if (approvalChance < 50) {
+            return <ResultScenarioA result={result} onReset={handleReset} />
+        } else {
+            return <ResultScenarioB result={result} onReset={handleReset} />
+        }
     }
 
     const filledCount = FORM_FIELDS.filter((f) => values[f.id] !== '').length
@@ -92,66 +93,42 @@ export default function Apply() {
     return (
         <div className="min-h-screen px-4 pt-24 pb-12">
             <div className="max-w-2xl mx-auto">
-                {/* Header */}
                 <div className="mb-10">
           <span className="tag bg-signal-green/10 text-signal-green border border-signal-green/20 mb-4">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-              <path d="M5 1v4M5 8v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/>
-            </svg>
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 1v4M5 8v.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none"/></svg>
             ЗАЯВКА НА СКОРИНГ
           </span>
                     <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4 mb-2 text-content transition-colors">Данные клиента</h1>
-                    <p className="text-content-dim text-sm transition-colors">Заполните все поля для оценки кредитного риска. Все данные обрабатываются локально.</p>
+                    <p className="text-content-dim text-sm transition-colors">Заполните все поля для оценки кредитного риска.</p>
                 </div>
 
-                {/* Progress */}
                 <div className="mb-8">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-xs font-mono text-content-dim transition-colors">Заполнено {filledCount} из {FORM_FIELDS.length}</span>
                         <span className="text-xs font-mono text-content-dim transition-colors">{Math.round((filledCount / FORM_FIELDS.length) * 100)}%</span>
                     </div>
                     <div className="h-1 rounded-full overflow-hidden" style={{ background: 'var(--progress-track)' }}>
-                        <div
-                            className="h-full bg-signal-green rounded-full transition-all duration-500 ease-out"
-                            style={{ width: `${(filledCount / FORM_FIELDS.length) * 100}%` }}
-                        />
+                        <div className="h-full bg-signal-green rounded-full transition-all duration-500 ease-out" style={{ width: `${(filledCount / FORM_FIELDS.length) * 100}%` }} />
                     </div>
                 </div>
 
-                {/* API error */}
                 {apiError && (
                     <div className="glass rounded-xl p-4 mb-6 border border-signal-red/20 bg-signal-red/5 animate-fade-in">
-                        <div className="flex items-start gap-3">
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-signal-red flex-shrink-0 mt-0.5">
-                                <circle cx="9" cy="9" r="7.5" stroke="currentColor" strokeWidth="1.5"/>
-                                <path d="M6 6.5l6 5M12 6.5l-6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                            </svg>
-                            <div>
-                                <p className="text-sm text-signal-red font-medium">Ошибка</p>
-                                <p className="text-xs text-signal-red/70 mt-0.5">{apiError}</p>
-                            </div>
-                        </div>
+                        <p className="text-sm text-signal-red font-medium">Ошибка: {apiError}</p>
                     </div>
                 )}
 
-                {/* Form */}
                 <form onSubmit={handleSubmit} noValidate>
                     {GROUP_ORDER.map((groupKey) => {
                         const group = FIELD_GROUPS[groupKey]
                         const groupFields = FORM_FIELDS.filter((f) => f.group === groupKey)
-
                         return (
                             <div key={groupKey} className="mb-8">
                                 <div className="flex items-center gap-2 mb-5">
-                                    <div className={`w-1.5 h-1.5 rounded-full ${
-                                        group.color === 'blue' ? 'bg-signal-blue' :
-                                            group.color === 'green' ? 'bg-signal-green' :
-                                                group.color === 'purple' ? 'bg-purple-400' : 'bg-signal-amber'
-                                    }`} />
+                                    <div className={`w-1.5 h-1.5 rounded-full ${group.color === 'blue' ? 'bg-signal-blue' : group.color === 'green' ? 'bg-signal-green' : group.color === 'purple' ? 'bg-purple-400' : 'bg-signal-amber'}`} />
                                     <h2 className="text-xs font-mono font-medium text-content-dim uppercase tracking-widest transition-colors">{group.label}</h2>
                                     <div className="flex-1 h-px bg-line transition-colors" />
                                 </div>
-
                                 <div className={`grid gap-5 ${groupFields.length === 2 ? 'sm:grid-cols-2' : 'grid-cols-1'}`}>
                                     {groupFields.map((field) => (
                                         <InputField key={field.id} field={field} value={values[field.id]} onChange={handleChange} error={errors[field.id]} />
@@ -163,15 +140,10 @@ export default function Apply() {
 
                     <div className="mt-10 pt-6 border-t border-line transition-colors">
                         <button type="submit" className="btn-primary w-full text-base py-4">
-                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                                <path d="M2 9 L6 5 L10 9 L16 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                <circle cx="9" cy="14" r="2.5" fill="currentColor"/>
-                            </svg>
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2 9 L6 5 L10 9 L16 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/><circle cx="9" cy="14" r="2.5" fill="currentColor"/></svg>
                             <span>Получить результат скоринга</span>
                         </button>
-                        <p className="text-center text-xs text-content-faint mt-4 font-mono transition-colors">
-                            Нажимая кнопку, вы запускаете модель кредитного скоринга
-                        </p>
+                        <p className="text-center text-xs text-content-faint mt-4 font-mono transition-colors">Нажимая кнопку, вы запускаете модель кредитного скоринга</p>
                     </div>
                 </form>
             </div>

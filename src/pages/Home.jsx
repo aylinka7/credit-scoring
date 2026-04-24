@@ -47,6 +47,37 @@ const FEATURES = [
     { title: 'Калиброванная модель', desc: 'Вероятность дефолта соответствует реальному риску — можно использовать для лимитирования.', accent: 'amber' },
 ]
 
+const NAV_CARDS = [
+    {
+        to: '/about',
+        emoji: '🏦',
+        title: 'Узнайте об Элдик Банке',
+        desc: 'История, факты, виды кредитов и реальные истории успеха клиентов по всей Кыргызской Республике.',
+        btn: 'О банке',
+        accentBorder: 'border-signal-blue/20',
+        accentGlow: 'bg-signal-blue/10',
+    },
+    {
+        to: '/apply',
+        emoji: '⚡',
+        title: 'Проверьте шансы на кредит',
+        desc: 'Заполните форму с данными клиента и получите мгновенный результат от AI-модели скоринга.',
+        btn: 'Подать заявку',
+        accentBorder: 'border-signal-green/20',
+        accentGlow: 'bg-signal-green/10',
+        primary: true,
+    },
+    {
+        to: '/credit-info',
+        emoji: '📖',
+        title: 'Всё о кредите простым языком',
+        desc: 'Термины, критерии банка, частые вопросы — понятно даже для тех, кто берёт кредит впервые.',
+        btn: 'Читать гайд',
+        accentBorder: 'border-signal-amber/20',
+        accentGlow: 'bg-signal-amber/10',
+    },
+]
+
 export default function Home() {
     return (
         <main>
@@ -59,7 +90,7 @@ export default function Home() {
                     <div className="inline-flex items-center gap-2 glass rounded-full px-4 py-2 mb-8 opacity-0-init animate-fade-up">
                         <span className="w-2 h-2 rounded-full bg-signal-green animate-pulse" />
                         <span className="text-xs font-mono text-content-dim tracking-wide transition-colors">
-              ХАКАТОН · КРЕДИТНЫЙ СКОРИНГ
+              ХАКАТОН · КРЕДИТНЫЙ СКОРИНГ · ЭЛДИК БАНК
             </span>
                     </div>
 
@@ -70,7 +101,7 @@ export default function Home() {
                     </h1>
 
                     <p className="text-base sm:text-lg text-content-dim max-w-xl mx-auto mb-10 leading-relaxed opacity-0-init animate-fade-up animate-delay-200 transition-colors">
-                        Автоматизированная система оценки кредитного риска. Введите данные клиента — получите решение с вероятностью дефолта и разбором факторов.
+                        Автоматизированная система оценки кредитного риска на базе AI. Введите данные клиента — получите решение с вероятностью дефолта и разбором факторов.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center justify-center gap-4 opacity-0-init animate-fade-up animate-delay-300">
@@ -143,19 +174,52 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* CTA */}
+            {/* Navigation cards — replaces old single CTA */}
             <section className="py-24 px-4">
-                <div className="max-w-2xl mx-auto text-center">
-                    <div className="glass rounded-3xl p-12 relative overflow-hidden noise transition-colors">
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-32 bg-signal-green/10 rounded-full blur-[100px] pointer-events-none" />
-                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-content relative transition-colors">Готовы проверить клиента?</h2>
-                        <p className="text-content-dim mb-8 relative transition-colors">Заполните форму с данными заявки и получите мгновенный результат скоринга.</p>
-                        <Link to="/apply" className="btn-primary text-base px-10 py-4 inline-flex items-center gap-3 relative">
-                            <span>Перейти к форме</span>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                        </Link>
+                <div className="max-w-6xl mx-auto">
+                    <div className="text-center mb-14">
+                        <span className="tag bg-surface-glass text-content-dim border border-line mb-4 inline-flex transition-colors">НАВИГАЦИЯ</span>
+                        <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mt-4 text-content transition-colors">
+                            Куда пойти дальше?
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {NAV_CARDS.map((card, i) => (
+                            <Link
+                                key={i}
+                                to={card.to}
+                                className={`group glass rounded-2xl p-8 relative overflow-hidden transition-all duration-300 hover:scale-[1.02] border ${card.accentBorder}`}
+                            >
+                                {/* Background glow */}
+                                <div className={`absolute -top-12 -right-12 w-40 h-40 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none ${card.accentGlow}`} />
+
+                                <div className="relative">
+                                    {/* Emoji icon */}
+                                    <div className="text-4xl mb-5">{card.emoji}</div>
+
+                                    {/* Title */}
+                                    <h3 className="text-xl font-bold text-content mb-3 transition-colors group-hover:text-signal-green">
+                                        {card.title}
+                                    </h3>
+
+                                    {/* Description */}
+                                    <p className="text-sm text-content-dim leading-relaxed mb-6 transition-colors">
+                                        {card.desc}
+                                    </p>
+
+                                    {/* Button */}
+                                    <div className={`inline-flex items-center gap-2 text-sm font-semibold transition-colors ${
+                                        card.primary ? 'text-signal-green' : 'text-content-muted group-hover:text-signal-green'
+                                    }`}>
+                                        <span>{card.btn}</span>
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform duration-200 group-hover:translate-x-1">
+                                            <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </Link>
+                        ))}
                     </div>
                 </div>
             </section>
